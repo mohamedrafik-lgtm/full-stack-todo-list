@@ -6,24 +6,51 @@ import { REGISTER_FORM } from "../data";
 import { ReactNode } from "react";
 import { yupResolver } from "@hookform/resolvers/yup"
 import { registerSchema } from "../validation";
+import axiosInstance from "../config/axios.config";
+import toast from "react-hot-toast";
 interface IFormInput {
   username: string,
-  Email:string,
+  email:string,
   password:string
 }
 const RegisterPage = () => {
     const { register, handleSubmit,formState:{errors} } = useForm<IFormInput>({
       resolver:yupResolver(registerSchema)
     })
-  const onSubmit: SubmitHandler<IFormInput> = (data) => console.log(data)
+  const onSubmit: SubmitHandler<IFormInput> = async data => {
+    console.log(data)
+
+    try {
+      const {status} =await axiosInstance.post("/auth/local/register",data);
+      if (status === 200){
+        toast.success("you will navigate to the page after 4 second to login!",{
+          position:"bottom-center",
+          duration:4000,
+          style:{
+            backgroundColor:"black",
+            color:"white",
+            width:"fit-content",
+            }
+            
+        })
+      }else{
+        console.log("error")
+      }
+    } catch (error) {
+      console.log(error)
+    }
+  
+  }
 
 
   // renders
   const renderRegisterForm = REGISTER_FORM.map(({name,placeholder,type,validation},idx):ReactNode=>{
     return <div key={idx}>
-      <Input {...register(name, validation)}
+      <Input 
         type={type}
-        placeholder={placeholder} />
+        placeholder={placeholder} 
+      {...register(name, validation)}
+      />
       {errors[name] && <InputErrorMessage msg={errors[name]?.message} />}
     </div>;
   })

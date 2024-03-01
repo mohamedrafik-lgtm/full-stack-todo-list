@@ -11,8 +11,8 @@ export const REGISTER_FORM:IRegisterInput[] = [
         }
     },
     {
-        name:"Email",
-        placeholder:"Email",
+        name:"email",
+        placeholder:"email",
         type:"text",
         validation:{
             required:true,
