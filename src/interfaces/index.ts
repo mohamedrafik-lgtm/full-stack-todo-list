@@ -19,3 +19,15 @@ export interface IErrorResponse{
         message?:string;
     }
 }
+
+
+export interface ILOGINInput{
+    name:"identifier" | "password",
+    placeholder:string,
+    type:string,
+    validation:{
+        required?:boolean,
+        minLength?:number,
+        pattern?:RegExp
+    }
+}
