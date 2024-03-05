@@ -3,23 +3,26 @@ import Input from "../components/ui/Input";
 import { useForm, SubmitHandler } from "react-hook-form"
 import InputErrorMessage from "../components/ui/InputErrorMessage";
 import { REGISTER_FORM } from "../data";
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
 import { yupResolver } from "@hookform/resolvers/yup"
 import { registerSchema } from "../validation";
 import axiosInstance from "../config/axios.config";
 import toast from "react-hot-toast";
+import {AxiosError } from "axios";
+import { IErrorResponse } from "../interfaces";
 interface IFormInput {
   username: string,
   email:string,
   password:string
 }
 const RegisterPage = () => {
+    const [isLoading , setIsLoading] = useState(false)
     const { register, handleSubmit,formState:{errors} } = useForm<IFormInput>({
       resolver:yupResolver(registerSchema)
     })
   const onSubmit: SubmitHandler<IFormInput> = async data => {
     console.log(data)
-
+    setIsLoading(true)
     try {
       const {status} =await axiosInstance.post("/auth/local/register",data);
       if (status === 200){
@@ -31,13 +34,21 @@ const RegisterPage = () => {
             color:"white",
             width:"fit-content",
             }
-            
         })
       }else{
         console.log("error")
       }
     } catch (error) {
-      console.log(error)
+
+      const errorOpj = error as AxiosError<IErrorResponse>
+      
+      toast.error(`${errorOpj.response?.data.error.message}`,{
+        position:"bottom-center",
+        duration:4000,
+        
+      })
+    }finally{
+      setIsLoading(false)
     }
   
   }
@@ -59,7 +70,9 @@ const RegisterPage = () => {
       <h2 className="text-center mb-4 text-3xl font-semibold">Register to get access!</h2>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         {renderRegisterForm}
-        <Button fullWidth>Register</Button>
+        <Button fullWidth isLoading={isLoading}>
+        
+          Register</Button>
       </form>
     </div>
   );
