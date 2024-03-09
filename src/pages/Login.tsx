@@ -10,16 +10,12 @@ import axiosInstance from "../config/axios.config";
 import toast from "react-hot-toast";
 import { AxiosError } from "axios";
 import { IErrorResponse } from "../interfaces";
-
-
+import { Link } from "react-router-dom";
 
 interface ILginInput {
   identifier:string,
   password:string
 }
-// eslint-disable-next-line react-hooks/rules-of-hooks
-
-
 const LoginPage = () => {
   const [isLoading , setIsLoading] = useState(false)
   const { register, handleSubmit,formState:{errors} } = useForm<ILginInput>({
@@ -30,26 +26,30 @@ const LoginPage = () => {
     
     setIsLoading(true)
     try {
-      const {status} = await axiosInstance.post("/auth/local",data);
+      const {status,data:resData} = await axiosInstance.post("/auth/local",data);
+      console.log(resData)
       if (status === 200){
-        toast.success("you will navigate to the home page after 4 second to login!",{
+        toast.success("you will navigate to the home page after 2 second",{
           position:"bottom-center",
-          duration:4000,
+          duration:1500,
           style:{
             backgroundColor:"black",
             color:"white",
             width:"fit-content",
             }
           
-        })
+        })  
       }
+      localStorage.setItem("loggedInUser",JSON.stringify(resData))
+      setTimeout(() => {
+        location.replace("/")
+      }, 2000);
     } catch (error) {
-
       const errorOpj = error as AxiosError<IErrorResponse>
       
       toast.error(`${errorOpj.response?.data.error.message}`,{
         position:"bottom-center",
-        duration:4000,
+        duration:1500,
         
       })
     }finally{
@@ -77,6 +77,13 @@ const LoginPage = () => {
         {renderlOGINrForm}
           
         <Button fullWidth isLoading={isLoading}>Login</Button>
+
+        <p className="text-center text-sm text-gray-500 space-x-2">
+          <span>have an account?</span>
+          <Link to={"/register"} className="underline text-indigo-600 font-semibold">
+          register
+          </Link>
+        </p>
       </form>
     </div>
   );
