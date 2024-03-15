@@ -1,10 +1,30 @@
 import Button from "./ui/Button";
+import useAuthenticatedQuery from "../hook/useAuthenticatedQuery";
 
 const TodoList = () => {
+  
+  const storageKey = "loggedInUser";
+  const userDataString = localStorage.getItem(storageKey);
+  const userData = userDataString ? JSON.parse(userDataString) : null
+  
+  const {isLoading,data} = useAuthenticatedQuery({
+    queryKey:["todos"],
+    url:"/users/me?populate=todos",
+    config:{
+      headers:{
+        Authorization:`Bearer ${userData.jwt}`
+      }
+    }
+  })
+  
+  if (isLoading) return <h3>Loading..</h3>;
+  
   return (
+    
     <div className="space-y-1 ">
-      <div className="flex items-center justify-between hover:bg-gray-100 duration-300 p-3 rounded-md even:bg-gray-100">
-        <p className="w-full font-semibold">1 - First Todo</p>
+      {data.todos.length ? data.todos.map(todo => (
+        <div key={todo.id} className="flex items-center justify-between hover:bg-gray-100 duration-300 p-3 rounded-md even:bg-gray-100">
+        <p className="w-full font-semibold">1 - {todo.title}</p>
         <div className="flex items-center justify-end w-full space-x-3">
           <Button size={"sm"}>Edit</Button>
           <Button variant={"danger"} size={"sm"}>
@@ -12,27 +32,10 @@ const TodoList = () => {
           </Button>
         </div>
       </div>
-
-      <div className="flex items-center justify-between hover:bg-gray-100 duration-300 p-3 rounded-md even:bg-gray-100">
-        <p className="w-full font-semibold">2 - Second Todo</p>
-        <div className="flex items-center justify-end w-full space-x-3">
-          <Button size={"sm"}>Edit</Button>
-          <Button variant={"danger"} size={"sm"}>
-            Remove
-          </Button>
-        </div>
+      )): <h3>No todos yet!</h3>}
+      
       </div>
-
-      <div className="flex items-center justify-between hover:bg-gray-100 duration-300 p-3 rounded-md even:bg-gray-100">
-        <p className="w-full font-semibold">3 - Third Todo</p>
-        <div className="flex items-center justify-end w-full space-x-3">
-          <Button size={"sm"}>Edit</Button>
-          <Button variant={"danger"} size={"sm"}>
-            Remove
-          </Button>
-        </div>
-      </div>
-    </div>
+    
   );
 };
 

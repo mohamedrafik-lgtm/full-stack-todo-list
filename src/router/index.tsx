@@ -25,6 +25,14 @@ const router = createBrowserRouter(
           }
         />
         <Route
+          path="/profile"
+          element={
+            <ProtectedRoute isAllowed={userData?.jwt} redirectPath="/login" data={userData}>
+              <h2>profile page</h2>
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="login"
           element={
             <ProtectedRoute isAllowed={!userData?.jwt} redirectPath="/" data={userData}>
@@ -41,7 +49,6 @@ const router = createBrowserRouter(
           }
         />
       </Route>
-
       {/* Page Not Found */}
       <Route path="*" element={<PageNotFound />} />
     </>
