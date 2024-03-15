@@ -31,3 +31,9 @@ export interface ILOGINInput{
         pattern?:RegExp
     }
 }
+
+
+export interface ITodosData {
+    id:number,
+    title:string
+}
