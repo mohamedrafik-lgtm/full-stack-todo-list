@@ -1,20 +1,38 @@
 import Button from "./ui/Button";
 import useAuthenticatedQuery from "../hook/useAuthenticatedQuery";
-import { ITodosData } from "../interfaces";
+import { ITodo } from "../interfaces";
 import Modal from "./ui/Model";
-import { useState } from "react";
+import { useState , ChangeEvent , FormEvent } from "react";
 import Input from "./ui/Input";
+import Textarea from "./ui/Textarea";
+import axiosInstance from "../config/axios.config";
 
 const TodoList = () => {
-  const [isEditModelOpen,setEditModelOpen] = useState(false)
   const storageKey = "loggedInUser";
   const userDataString = localStorage.getItem(storageKey);
   const userData = userDataString ? JSON.parse(userDataString) : null
   
+  const [isEditModelOpen,setEditModelOpen] = useState(false)
+  const [todoToEdite,setTodoToEdit] = useState<ITodo>({
+      id: 0,
+      title: "",
+      description:""
+  })
 
   // Handelers
-  function onToggleEditModil(){
-    setEditModelOpen(prev => !prev)
+  const onCloseEditModil= () => {
+    setTodoToEdit(
+      {
+        id: 0,
+        title: "",
+        description:""
+    }
+    )
+    setEditModelOpen(false)
+  };
+  const onOpenEditModil= (todo:ITodo) => {
+    setTodoToEdit(todo)
+    setEditModelOpen(true)
   }
   const {isLoading,data} = useAuthenticatedQuery({
     queryKey:["todos"],
@@ -25,17 +43,41 @@ const TodoList = () => {
       }
     }
   })
+
+  const onChangeHandler = ( evt :ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const {value,name} = evt.target
+    setTodoToEdit({
+      ...todoToEdite,
+      [name]:value
+    })
+  }
+  const submitHandler = async (evt:FormEvent<HTMLFormElement>) =>{
+    evt.preventDefault()
+    const {title,description} = todoToEdite;
+    try {
+    const res =  await axiosInstance.put(`/todos/${todoToEdite.id}`,{
+      data:{title,description}
+    },{
+      headers:{
+        Authorization:`Bearer ${userData.jwt}`
+      }
+    })
+    console.log(res)
+    } catch (error) {
+      console.log(error)
+    }
+  }
   
   if (isLoading) return <h3>Loading..</h3>;
   console.log(data.todos)
   return (
     
     <div className="space-y-1 ">
-      {data.todos.length ? data.todos.map((todo:ITodosData) => (
+      {data.todos.length ? data.todos.map((todo:ITodo) => (
         <div key={todo.id} className="flex items-center justify-between hover:bg-gray-100 duration-300 p-3 rounded-md even:bg-gray-100">
         <p className="w-full font-semibold">1 - {todo.title}</p>
         <div className="flex items-center justify-end w-full space-x-3">
-          <Button size={"sm"} onClick={onToggleEditModil}>Edit</Button>
+          <Button size={"sm"} onClick={()=> onOpenEditModil(todo)}>Edit</Button>
           <Button variant={"danger"} size={"sm"}>
             Remove
           </Button>
@@ -43,14 +85,17 @@ const TodoList = () => {
       </div>
       )) : <h3>No todos yet!</h3>}
       
-      <Modal isOpen={isEditModelOpen} closeModal={onToggleEditModil} title="edit this todo">
-        <Input value="edit todo"/>
+      <Modal isOpen={isEditModelOpen} closeModal={onCloseEditModil} title="edit this todo">
+        <form className="space-y-3" onSubmit={submitHandler}>
+        <Input name="title" value={todoToEdite.title} onChange={onChangeHandler}/>
+        <Textarea name="description" value={todoToEdite.description} onChange={onChangeHandler}/>
         <div className="flex items-center space-x-2 mt-4">
         <Button className="bg-indigo-700 hover:bgidigo-800">Update</Button>
-        <Button variant={"cancel"} onClick={onToggleEditModil}>
+        <Button variant={"cancel"} onClick={onCloseEditModil}>
           Cancel
         </Button>
         </div>
+        </form>
       </Modal>
       </div>
     
@@ -58,3 +103,5 @@ const TodoList = () => {
 };
 
 export default TodoList;
+
+// ChangeEvent<HTMLInputElement>

@@ -33,7 +33,8 @@ export interface ILOGINInput{
 }
 
 
-export interface ITodosData {
+export interface ITodo{
     id:number,
-    title:string
+    title:string,
+    description:string
 }
