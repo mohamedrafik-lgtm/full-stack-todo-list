@@ -10,7 +10,6 @@ import RegisterPage from "../pages/Register";
 const storageKey = "loggedInUser";
 const userDataString = localStorage.getItem(storageKey);
 const userData = userDataString ? JSON.parse(userDataString) : null
-console.log(userData)
 const router = createBrowserRouter(
   createRoutesFromElements(
     <>

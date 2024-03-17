@@ -6,6 +6,8 @@ import { useState , ChangeEvent , FormEvent } from "react";
 import Input from "./ui/Input";
 import Textarea from "./ui/Textarea";
 import axiosInstance from "../config/axios.config";
+import toast from "react-hot-toast";
+import TodoScilton from "./todoScilton";
 
 const TodoList = () => {
   const storageKey = "loggedInUser";
@@ -46,11 +48,18 @@ const TodoList = () => {
     }
   })
 
-
-  const openDeleteModel = ()=>{
+  const openDeleteModel = (todo:ITodo)=>{
+    setTodoToEdit(todo)
     setDeleteModel(true)
   }
   const closeDeleteModel = ()=>{
+    setTodoToEdit(
+      {
+        id: 0,
+        title: "",
+        description:""
+    }
+    )
     setDeleteModel(false)
   }
 
@@ -60,6 +69,20 @@ const TodoList = () => {
       ...todoToEdite,
       [name]:value
     })
+  }
+  const onRemove = async ()=>{
+    try {
+    const {status} =  await axiosInstance.delete(`/todos/${todoToEdite.id}`,{
+        headers:{
+          Authorization:`Bearer ${userData.jwt}`
+        }  
+      })
+      if (status === 200){
+        closeDeleteModel()
+      }
+    } catch (error) {
+      console.log(error)
+    }
   }
   const submitHandler = async (evt:FormEvent<HTMLFormElement>) =>{
     setIsUpdating(true)
@@ -74,7 +97,18 @@ const TodoList = () => {
       }
     })
     if (status === 200){
-      onCloseEditModil()
+      setTimeout(()=>{
+        onCloseEditModil()
+        toast.success("It will be deleted after 500 ms", {
+          position: "bottom-center",
+          duration: 1500,
+          style: {
+            backgroundColor: "black",
+            color: "white",
+            width: "fit-content",
+          },
+        })
+      },500)
     }
     } catch (error) {
       console.log(error)
@@ -83,17 +117,21 @@ const TodoList = () => {
     }
   }
   
-  if (isLoading) return <h3>Loading..</h3>;
-  console.log(data.todos)
+  
+  if (isLoading) return <>
+  <div className="space-y-1 p-3">
+  {Array.from({length : 3},(_,idx)=> <TodoScilton key={idx}/>)}
+  </div>
+  </>
   return (
     
     <div className="space-y-1 ">
       {data.todos.length ? data.todos.map((todo:ITodo) => (
         <div key={todo.id} className="flex items-center justify-between hover:bg-gray-100 duration-300 p-3 rounded-md even:bg-gray-100">
-        <p className="w-full font-semibold">1 - {todo.title}</p>
+        <p className="w-full font-semibold">{todo.id}- {todo.title}</p>
         <div className="flex items-center justify-end w-full space-x-3">
           <Button size={"sm"} onClick={()=> onOpenEditModil(todo)}>Edit</Button>
-          <Button variant={"danger"} size={"sm"} onClick={openDeleteModel}>
+          <Button variant={"danger"} size={"sm"} onClick={()=>openDeleteModel(todo)}>
             Remove
           </Button>
         </div>
@@ -120,7 +158,7 @@ const TodoList = () => {
       will also be deleted , plase make sure this is the intended action."
       >
         <div className="flex items-center space-x-3">
-          <Button variant={"danger"} onClick={()=>{}}>
+          <Button variant={"danger"} onClick={onRemove}>
             Yes. remove
             </Button>
             <Button variant={"cancel"} onClick={closeDeleteModel}>Cansel</Button>
