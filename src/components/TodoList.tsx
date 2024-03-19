@@ -14,6 +14,7 @@ const TodoList = () => {
   const userDataString = localStorage.getItem(storageKey);
   const userData = userDataString ? JSON.parse(userDataString) : null
   
+  const [queryVersion,setQueryVersion]= useState(1)
   const [isEditModelOpen,setEditModelOpen] = useState(false)
   const [isUpdating,setIsUpdating] = useState(false)
   const [deleteModel,setDeleteModel] = useState(false)
@@ -56,7 +57,7 @@ const TodoList = () => {
     setEditModelOpen(true)
   }
   const {isLoading,data} = useAuthenticatedQuery({
-    queryKey:["todoList",`${todoToEdite.id}`],
+    queryKey:["todoList",`${queryVersion}`],
     url:"/users/me?populate=todos",
     config:{
       headers:{
@@ -103,6 +104,7 @@ const TodoList = () => {
       })
       if (status === 200){
         closeDeleteModel()
+        setQueryVersion(prev => prev + 1)
       }
     } catch (error) {
       console.log(error)
@@ -123,6 +125,7 @@ const TodoList = () => {
     if (status === 200){
       setTimeout(()=>{
         onCloseEditModil()
+        setQueryVersion(prev => prev + 1)
         toast.success("It will be deleted this todo after 500 ms", {
           position: "bottom-center",
           duration: 1500,
@@ -154,8 +157,9 @@ const TodoList = () => {
     })
     if (status === 200){
       setTimeout(()=>{
+        setQueryVersion(prev => prev + 1)
         onCloseAddModil()
-        toast.success("It will be deleted this todo after 500 ms", {
+        toast.success("you added a new Todo after 500 ms", {
           position: "bottom-center",
           duration: 1500,
           style: {
@@ -202,7 +206,7 @@ const TodoList = () => {
         <Textarea name="description" value={todoToAdd.description} onChange={onChangeAddHandler}/>
         <div className="flex items-center space-x-2 mt-4">
         <Button className="bg-indigo-700 hover:bgidigo-800" isLoading={isUpdating}>Add Todo</Button>
-        <Button variant={"cancel"} onClick={onCloseEditModil}>
+        <Button type="button" variant={"cancel"} onClick={onCloseAddModil}>
           Cancel
         </Button>
         </div>
@@ -215,7 +219,7 @@ const TodoList = () => {
         <Textarea name="description" value={todoToEdite.description} onChange={onChangeHandler}/>
         <div className="flex items-center space-x-2 mt-4">
         <Button className="bg-indigo-700 hover:bgidigo-800" isLoading={isUpdating}>Update</Button>
-        <Button variant={"cancel"} onClick={onCloseEditModil}>
+        <Button type="button" variant={"cancel"} onClick={onCloseEditModil}>
           Cancel
         </Button>
         </div>
