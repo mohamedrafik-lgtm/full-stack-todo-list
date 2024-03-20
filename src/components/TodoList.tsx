@@ -8,6 +8,8 @@ import Textarea from "./ui/Textarea";
 import axiosInstance from "../config/axios.config";
 import toast from "react-hot-toast";
 import TodoScilton from "./todoScilton";
+import { faker } from '@faker-js/faker';
+
 
 const TodoList = () => {
   const storageKey = "loggedInUser";
@@ -18,25 +20,35 @@ const TodoList = () => {
   const [isEditModelOpen,setEditModelOpen] = useState(false)
   const [isUpdating,setIsUpdating] = useState(false)
   const [deleteModel,setDeleteModel] = useState(false)
+  const [isOpenAddModel,setIsAddModel] = useState(false)
+
+  const [todoToAdd,setTodoToAdd] = useState({
+    title: "",
+    description:""
+  })
   const [todoToEdite,setTodoToEdit] = useState<ITodo>({
     id: 0,
     title: "",
     description:""
   })
-  const [todoToAdd,setTodoToAdd] = useState({
-    title: "",
-    description:""
+  const {isLoading,data} = useAuthenticatedQuery({
+    queryKey:["todoList",`${queryVersion}`],
+    url:"/users/me?populate=todos",
+    config:{
+      headers:{
+        Authorization:`Bearer ${userData.jwt}`
+      }
+    }
   })
-  const [isOpenAddModel,setIsAddModel] = useState(false)
+  
 
   // Handelers
+
   const onCloseAddModil= () => {
-    setTodoToAdd(
-      {
+    setTodoToAdd({
         title: "",
         description:""
-    }
-    )
+    });
     setIsAddModel(false)
   };
   const onOpenAddModil= () => {
@@ -56,15 +68,24 @@ const TodoList = () => {
     setTodoToEdit(todo)
     setEditModelOpen(true)
   }
-  const {isLoading,data} = useAuthenticatedQuery({
-    queryKey:["todoList",`${queryVersion}`],
-    url:"/users/me?populate=todos",
-    config:{
-      headers:{
-        Authorization:`Bearer ${userData.jwt}`
-      }
+  const onGnrateTodo = async()=>{
+    // 100 record
+    for (let i = 0; i < 100; i++){
+      try {
+          await axiosInstance.post(`/todos`,{
+          data:{title:faker.lorem.words(10),description:faker.lorem.paragraph(2),user:[userData.user.id]}
+        },{
+          headers:{
+            Authorization:`Bearer ${userData.jwt}`
+          }
+        })
+        
+        } catch (error) {
+          console.log(error)
+        }
     }
-  })
+    
+  }
 
   const openDeleteModel = (todo:ITodo)=>{
     setTodoToEdit(todo)
@@ -123,10 +144,9 @@ const TodoList = () => {
       }
     })
     if (status === 200){
-      setTimeout(()=>{
-        onCloseEditModil()
-        setQueryVersion(prev => prev + 1)
-        toast.success("It will be deleted this todo after 500 ms", {
+      setQueryVersion(prev => prev + 1)
+      onCloseEditModil()
+        toast.success("It will be deleted this todo", {
           position: "bottom-center",
           duration: 1500,
           style: {
@@ -135,7 +155,6 @@ const TodoList = () => {
             width: "fit-content",
           },
         })
-      },500)
     }
     } catch (error) {
       console.log(error)
@@ -143,23 +162,22 @@ const TodoList = () => {
       setIsUpdating(false)
     }
   }
-  const submitAddTodoHandler = async (evt:FormEvent<HTMLFormElement>) =>{
+  const submitAddTodoHandler = async (evt:FormEvent<HTMLFormElement>) => {
     setIsUpdating(true)
     evt.preventDefault()
     const {title,description} = todoToAdd;
     try {
     const {status} =  await axiosInstance.post(`/todos`,{
-      data:{title,description}
+      data:{title,description,user:[userData.user.id]}
     },{
       headers:{
         Authorization:`Bearer ${userData.jwt}`
       }
     })
     if (status === 200){
-      setTimeout(()=>{
-        setQueryVersion(prev => prev + 1)
         onCloseAddModil()
-        toast.success("you added a new Todo after 500 ms", {
+        setQueryVersion(prev => prev + 1)
+        toast.success("you added a new Todo", {
           position: "bottom-center",
           duration: 1500,
           style: {
@@ -168,7 +186,6 @@ const TodoList = () => {
             width: "fit-content",
           },
         })
-      },500)
     }
     } catch (error) {
       console.log(error)
@@ -186,7 +203,18 @@ const TodoList = () => {
   return (
     <div className="space-y-1 ">
       <div className="w-fit mx-auto my-10">
-          <Button size={"sm"} onClick={onOpenAddModil}>Post new todo</Button>
+        {isLoading ? (
+          <div className="flex items-center space-x-2">
+            <div className="w-32 h-9 bg-gray-300 rounded-md dark:bg-gray-400"></div>
+            <div className="w-32 h-9 bg-gray-300 rounded-md dark:bg-gray-400"></div>
+          </div>
+        ):(<div className="flex items-center space-x-2">
+        <Button size={"sm"} onClick={onOpenAddModil}>Post new todo</Button>
+        <Button variant={"outline"} size={"sm"} onClick={onGnrateTodo}>
+          Generate todos
+          </Button>
+        </div>)}
+          
       </div>
       {data.todos.length ? data.todos.map((todo:ITodo) => (
         <div key={todo.id} className="flex items-center justify-between hover:bg-gray-100 duration-300 p-3 rounded-md even:bg-gray-100">
@@ -225,7 +253,7 @@ const TodoList = () => {
         </div>
         </form>
       </Modal>
-          
+          {/* delete todo Model*/}
       <Modal isOpen={deleteModel}
       closeModal={closeDeleteModel}
       title="are you sure you want to remove this Todo from your store?"
