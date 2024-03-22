@@ -209,7 +209,7 @@ const TodoList = () => {
             <div className="w-32 h-9 bg-gray-300 rounded-md dark:bg-gray-400"></div>
           </div>
         ):(<div className="flex items-center space-x-2">
-        <Button size={"sm"} onClick={onOpenAddModil}>Post new todo</Button>
+        <Button size={"sm"} onClick={onOpenAddModil} >Post new todo</Button>
         <Button variant={"outline"} size={"sm"} onClick={onGnrateTodo}>
           Generate todos
           </Button>
