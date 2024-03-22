@@ -32,9 +32,14 @@ const Navbar = () => {
         {
           userData ? 
           <div className="flex item-center text-indigo-600 space-x-2">
+
+            <li className="text-indigo-600 duration-200 font-semibold text-lg">
+            <NavLink to="/Todos">Todos</NavLink>
+            </li>
             <li className="text-indigo-600 duration-200 font-semibold text-lg">
             <NavLink to="/profile">profile</NavLink>
             </li>
+            
             
             <Button className="cursor-pointer" size={"sm"} onClick={onLogout}>
               Logout
